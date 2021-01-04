@@ -20,6 +20,9 @@
 #ifdef USERMOD_SENSORSTOMQTT
 #include "usermod_v2_SensorsToMqtt.h"
 #endif
+#ifdef USERMOD_MOSFETDIM
+#include "../usermods/mosfet_dim_v2/usermod_mosfet_dim_v2.h"
+#endif
 
 void registerUsermods()
 {
@@ -38,5 +41,8 @@ void registerUsermods()
 #endif
 #ifdef USERMOD_SENSORSTOMQTT
   usermods.add(new UserMod_SensorsToMQTT());
+#endif
+#ifdef USERMOD_MOSFETDIM
+  usermods.add(new MosfetDim());
 #endif
 }
