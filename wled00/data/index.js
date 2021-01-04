@@ -1056,6 +1056,11 @@ function setIntensity() {
 	requestJson(obj, false);
 }
 
+function setMosfetDim() {
+	var obj = {"mosfet_dim": parseInt(d.getElementById('sliderMosfetDim').value)};
+	requestJson(obj, false);
+}
+
 function setLor(i) {
 	var obj = {"lor": i};
 	requestJson(obj);

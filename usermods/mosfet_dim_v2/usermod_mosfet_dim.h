@@ -64,11 +64,11 @@ class MosfetDim : public Usermod {
      */
     void addToJsonInfo(JsonObject& root)
     {
-      //this code adds "u":{"Middle Led":[pwmValue," / 255"]} to the info object
+      //this code adds "u":{"Mosfet Dim":[pwmValue," / 255"]} to the info object
       JsonObject user = root["u"];
       if (user.isNull()) user = root.createNestedObject("u");
 
-      JsonArray lightArr = user.createNestedArray("Middle Led"); //name
+      JsonArray lightArr = user.createNestedArray("Mosfet Dim"); //name
       lightArr.add(pwmValue); //value
       lightArr.add(" / 255"); //unit
     }
@@ -79,7 +79,7 @@ class MosfetDim : public Usermod {
      */
     void addToJsonState(JsonObject& root)
     {
-      //root["user0"] = userVar0;
+      root["mosfet_dim"] = pwmValue;
     }
 
 
