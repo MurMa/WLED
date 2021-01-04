@@ -17,6 +17,7 @@ class MosfetDim : public Usermod {
     //Private class members. You can declare variables and functions only accessible to your usermod here
     unsigned long lastTime = 0;
     byte pwmValue = 0;
+    boolean powerValue = true;
   public:
     //Functions called by WLED
 
@@ -79,7 +80,7 @@ class MosfetDim : public Usermod {
      */
     void addToJsonState(JsonObject& root)
     {
-      root["mosfet_dim"] = pwmValue;
+      root["mosfetdim"] = pwmValue;
     }
 
 
@@ -89,10 +90,15 @@ class MosfetDim : public Usermod {
      */
     void readFromJsonState(JsonObject& root)
     {
-      pwmValue = root["mosfet_dim"] | pwmValue; //if "mosfet_dim" key exists in JSON, update, else keep old value
+      pwmValue = root["mosfetdim"] | pwmValue; //if "mosfet_dim" key exists in JSON, update, else keep old value
       if(pwmValue < 0) Serial.println(F("received invalid mosfet_dim value, cannot be under 0!"));
       if(pwmValue > 255) Serial.println(F("received invalid mosfet_dim value, cannot be over 255!"));
-      //if (root["bri"] == 255) Serial.println(F("Don't burn down your garage!"));
+      //Check the power state
+      powerValue = root["on"] | powerValue;
+      //If Wled is turned off, also set the pwm value to 0
+      if(!powerValue){
+        pwmValue = 0;
+      }
     }
 
 

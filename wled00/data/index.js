@@ -1057,7 +1057,7 @@ function setIntensity() {
 }
 
 function setMosfetDim() {
-	var obj = {"mosfet_dim": parseInt(d.getElementById('sliderMosfetDim').value)};
+	var obj = {"mosfetdim": parseInt(d.getElementById('sliderMosfetDim').value)};
 	requestJson(obj, false);
 }
 

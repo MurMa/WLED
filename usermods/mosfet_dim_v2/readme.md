@@ -1,6 +1,7 @@
 # Mosfet dimming
 
 This usermod will output a pwm signal to a pin. This can be used to control and dim an analog led.
+The pwm value can be set via the JSON API or by adjusting a slider in the Web UI.
 
 ## Installation 
 
@@ -49,7 +50,7 @@ Add
 
 ```
 function setMosfetDim() {
-	var obj = {"mosfet_dim": parseInt(d.getElementById('sliderMosfetDim').value)};
+	var obj = {"mosfetdim": parseInt(d.getElementById('sliderMosfetDim').value)};
 	requestJson(obj, false);
 }
 ```
@@ -57,7 +58,7 @@ under the setIntensity() function
 
 ### Compilation
 
-Now you need to run:
+To recompile the Web UI you need to run:
 ```
 npm install
 ```
@@ -65,13 +66,17 @@ and
 ```
 npm run build
 ```
-
 See [`Changing Web UI`](https://github.com/Aircoookie/WLED/wiki/Add-own-functionality#changing-web-ui)
+
+then proceed with the usual compilation as described [here](https://github.com/Aircoookie/WLED/wiki/Compiling-WLED)
+
 
 ## Usage
 
-To control the pwm value, you can use the JSON API. Send the key "mosfet_dim" and a value from 0 to 255.
+To control the pwm value, you can use the JSON API. Send the key "mosfetdim" and a value from 0 to 255.
 
-Example for half brightness (technically, not perceived): `{"mosfet_dim":128}`
+Example for half brightness (technically, not perceived): `{"mosfetdim":128}`
 
-You can view the current mosfet_dim value in the Info screen in the GUI or using the JSON API
+You can view the current mosfet dim value in the Info screen in the GUI or using the JSON API.
+
+A slider in the Web UI can be used to control the brightness.
