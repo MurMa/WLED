@@ -21,7 +21,7 @@
 #include "usermod_v2_SensorsToMqtt.h"
 #endif
 #ifdef USERMOD_MOSFETDIM
-#include "../usermods/mosfet_dim_v2/usermod_mosfet_dim_v2.h"
+#include "../usermods/mosfet_dim_v2/usermod_mosfet_dim.h"
 #endif
 
 void registerUsermods()

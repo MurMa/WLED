@@ -16,6 +16,7 @@ class MosfetDim : public Usermod {
   private:
     //Private class members. You can declare variables and functions only accessible to your usermod here
     unsigned long lastTime = 0;
+    byte pwmValue = 0;
   public:
     //Functions called by WLED
 
@@ -50,7 +51,7 @@ class MosfetDim : public Usermod {
     void loop() {
       if (millis() - lastTime > 1000) {
         //Serial.println("I'm alive!");
-        analogWrite(MOSFET_PIN, 128);
+        analogWrite(MOSFET_PIN, pwmValue);
         lastTime = millis();
       }
     }
@@ -61,20 +62,16 @@ class MosfetDim : public Usermod {
      * Creating an "u" object allows you to add custom key/value pairs to the Info section of the WLED web UI.
      * Below it is shown how this could be used for e.g. a light sensor
      */
-    /*
     void addToJsonInfo(JsonObject& root)
     {
-      int reading = 20;
-      //this code adds "u":{"Light":[20," lux"]} to the info object
+      //this code adds "u":{"Middle Led":[pwmValue," / 255"]} to the info object
       JsonObject user = root["u"];
       if (user.isNull()) user = root.createNestedObject("u");
 
-      JsonArray lightArr = user.createNestedArray("Light"); //name
-      lightArr.add(reading); //value
-      lightArr.add(" lux"); //unit
+      JsonArray lightArr = user.createNestedArray("Middle Led"); //name
+      lightArr.add(pwmValue); //value
+      lightArr.add(" / 255"); //unit
     }
-    */
-
 
     /*
      * addToJsonState() can be used to add custom entries to the /json/state part of the JSON API (state object).
@@ -92,7 +89,9 @@ class MosfetDim : public Usermod {
      */
     void readFromJsonState(JsonObject& root)
     {
-      userVar0 = root["user0"] | userVar0; //if "user0" key exists in JSON, update, else keep old value
+      pwmValue = root["mosfet_dim"] | pwmValue; //if "mosfet_dim" key exists in JSON, update, else keep old value
+      if(pwmValue < 0) Serial.println(F("received invalid mosfet_dim value, cannot be under 0!"));
+      if(pwmValue > 255) Serial.println(F("received invalid mosfet_dim value, cannot be over 255!"));
       //if (root["bri"] == 255) Serial.println(F("Don't burn down your garage!"));
     }
 
@@ -113,8 +112,8 @@ class MosfetDim : public Usermod {
      */
     void addToConfig(JsonObject& root)
     {
-      JsonObject top = root.createNestedObject("exampleUsermod");
-      top["great"] = userVar0; //save this var persistently whenever settings are saved
+      // JsonObject top = root.createNestedObject("exampleUsermod");
+      // top["great"] = userVar0; //save this var persistently whenever settings are saved
     }
 
 
@@ -128,8 +127,8 @@ class MosfetDim : public Usermod {
      */
     void readFromConfig(JsonObject& root)
     {
-      JsonObject top = root["top"];
-      userVar0 = top["great"] | 42; //The value right of the pipe "|" is the default value in case your setting was not present in cfg.json (e.g. first boot)
+      // JsonObject top = root["top"];
+      // userVar0 = top["great"] | 42; //The value right of the pipe "|" is the default value in case your setting was not present in cfg.json (e.g. first boot)
     }
 
    
@@ -139,7 +138,7 @@ class MosfetDim : public Usermod {
      */
     uint16_t getId()
     {
-      return USERMOD_ID_EXAMPLE;
+      return USERMOD_ID_MOSFETDIM;
     }
 
    //More methods can be added in the future, this example will then be extended.
