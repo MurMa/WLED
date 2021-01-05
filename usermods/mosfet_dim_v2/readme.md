@@ -9,6 +9,8 @@ The pwm value can be set via the JSON API or by adjusting a slider in the Web UI
 
 Copy the example `platformio_override.ini` to the root directory.  This file should be placed in the same directory as `platformio.ini`.
 
+Replace the `wled00/src/usermods_list.cpp` file with the one in this directory.
+
 ### Controlling via GUI 
 
 If you want to be able to control the mosfet dim value using the gui, you need to make two changes:
@@ -54,7 +56,7 @@ function setMosfetDim() {
 	requestJson(obj, false);
 }
 ```
-under the setIntensity() function
+under the setIntensity() function (line 1054) 
 
 ### Compilation
 

@@ -2,22 +2,25 @@
 
 #include "wled.h"
 
-//ESP8266 boards
-#define MOSFET_PIN 15
+//Pin to output the pwm signal to
+#ifndef USERMOD_MOSFET_PIN
+#define USERMOD_MOSFET_PIN 15 //D8
+#endif
 
 /*
  * Usermods allow you to add own functionality to WLED more easily
  * See: https://github.com/Aircoookie/WLED/wiki/Add-own-functionality
  * 
  */
-
 //The class for the MosfetDim mod
 class MosfetDim : public Usermod {
   private:
     //Private class members. You can declare variables and functions only accessible to your usermod here
     unsigned long lastTime = 0;
     byte pwmValue = 0;
+    byte lastPwmValue = 0;
     boolean powerValue = true;
+    boolean lastPowerValue = true;
   public:
     //Functions called by WLED
 
@@ -50,9 +53,8 @@ class MosfetDim : public Usermod {
      *    Instead, use a timer check as shown here.
      */
     void loop() {
-      if (millis() - lastTime > 1000) {
-        //Serial.println("I'm alive!");
-        analogWrite(MOSFET_PIN, pwmValue);
+      if (millis() - lastTime > 10) {
+        analogWrite(USERMOD_MOSFET_PIN, pwmValue);
         lastTime = millis();
       }
     }
@@ -95,10 +97,15 @@ class MosfetDim : public Usermod {
       if(pwmValue > 255) Serial.println(F("received invalid mosfet_dim value, cannot be over 255!"));
       //Check the power state
       powerValue = root["on"] | powerValue;
+      if(!powerValue && lastPowerValue) {
       //If Wled is turned off, also set the pwm value to 0
-      if(!powerValue){
+        lastPwmValue = pwmValue;
         pwmValue = 0;
+      } else if(powerValue && !lastPowerValue) {
+        //If Wled is turned back on, set pwm value to the value before turning off
+        pwmValue = lastPwmValue;
       }
+      lastPowerValue = powerValue;
     }
 
 
