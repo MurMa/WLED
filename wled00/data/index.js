@@ -1112,6 +1112,7 @@ function saveP(i) {
 	} else {
 		obj.ib = d.getElementById(`p${i}ibtgl`).checked;
 		obj.sb = d.getElementById(`p${i}sbtgl`).checked;
+		obj.mosfetdim = parseInt(d.getElementById('sliderMosfetDim').value);
 	}
 	obj.psave = pI; obj.n = pN;
 	var pQN = d.getElementById(`p${i}ql`).value;

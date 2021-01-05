@@ -56,7 +56,26 @@ function setMosfetDim() {
 	requestJson(obj, false);
 }
 ```
-under the setIntensity() function (line 1054) 
+under the setIntensity() function (line 1054, as time of writing) 
+
+Add
+```
+obj.md = parseInt(d.getElementById('sliderMosfetDim').value);	
+```
+in the saveP() function
+```
+...
+if (!d.getElementById(`p${i}cstgl`).checked) {
+    ...
+    obj.o = true;
+} else {
+    obj.ib = d.getElementById(`p${i}ibtgl`).checked;
+    obj.sb = d.getElementById(`p${i}sbtgl`).checked;
+--> obj.mosfetdim = parseInt(d.getElementById('sliderMosfetDim').value); <--
+}
+obj.psave = pI; obj.n = pN;
+...
+```
 
 ### Compilation
 
