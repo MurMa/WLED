@@ -13,9 +13,11 @@ Replace the `wled00/src/usermods_list.cpp` file with the one in this directory.
 
 ### Controlling via GUI 
 
-If you want to be able to control the mosfet dim value using the gui, you need to make two changes:
+If you want to be able to control the mosfet dim value using the gui, you need to make changes in two files:
 
 ### In `index.htm`
+
+You can replace the wled00/data/index.htm file with the one in this directory or do the following changes manually:
 
 Add
 
@@ -48,34 +50,70 @@ after this div:
 
 ### In `index.js`
 
-Add
+You can replace the wled00/data/index.js file with the one in this directory or do the following changes manually:
 
+`Add`
 ```
 function setMosfetDim() {
 	var obj = {"mosfetdim": parseInt(d.getElementById('sliderMosfetDim').value)};
 	requestJson(obj, false);
 }
 ```
-under the setIntensity() function (line 1054, as time of writing) 
+anywhere in index.js (I put it beneath the setIntensity() function)
 
-Add
+`Add`
 ```
 obj.md = parseInt(d.getElementById('sliderMosfetDim').value);	
 ```
-in the saveP() function
+in the saveP() function:
 ```
-...
-if (!d.getElementById(`p${i}cstgl`).checked) {
+function saveP(i) {
     ...
-    obj.o = true;
-} else {
-    obj.ib = d.getElementById(`p${i}ibtgl`).checked;
-    obj.sb = d.getElementById(`p${i}sbtgl`).checked;
---> obj.mosfetdim = parseInt(d.getElementById('sliderMosfetDim').value); <--
+    if (!d.getElementById(`p${i}cstgl`).checked) {
+        ...
+        obj.o = true;
+    } else {
+        obj.ib = d.getElementById(`p${i}ibtgl`).checked;
+        obj.sb = d.getElementById(`p${i}sbtgl`).checked;
+    --> obj.mosfetdim = parseInt(d.getElementById('sliderMosfetDim').value); <--
+    }
+    obj.psave = pI; obj.n = pN;
+    ...
 }
-obj.psave = pI; obj.n = pN;
-...
 ```
+
+`Add`
+```
+d.getElementById('sliderMosfetDim').value= s.mosfetdim;
+```
+in the requestJson() function:
+```
+function requestJson(command, rinfo = true, verbose = true) {
+    ...
+    isOn = s.on;
+    d.getElementById('sliderBri').value= s.bri;
+--> d.getElementById('sliderMosfetDim').value= s.mosfetdim; <--
+    nlA = s.nl.on;
+    nlDur = s.nl.dur;
+    ...
+}
+```
+
+`Add`
+```
+updateTrail(d.getElementById('sliderMosfetDim'));
+```
+in the updateUI() function:
+````
+function updateUI() {
+    ...
+    updateTrail(d.getElementById('sliderW'));
+--> updateTrail(d.getElementById('sliderMosfetDim')); <--
+	if (isRgbw) d.getElementById('wwrap').style.display = "block";
+    ...
+}
+```
+
 
 ### Compilation
 
