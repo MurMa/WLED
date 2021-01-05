@@ -41,6 +41,7 @@ after this div:
         <i class="icons slider-icon" onclick="tglTheme()">&#xe2a6;</i>
         <div class="sliderwrap il">
             <input id="sliderBri" onchange="setBri()" oninput="updateTrail(this)" max="255" min="1" type="range" value="128" />
+            <output class="sliderbubble hidden"></output>
             <div class="sliderdisplay"></div>
         </div>
     </div>
