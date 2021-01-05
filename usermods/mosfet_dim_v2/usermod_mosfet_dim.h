@@ -6,6 +6,10 @@
 #ifndef USERMOD_MOSFET_PIN
 #define USERMOD_MOSFET_PIN 15 //D8
 #endif
+//change rate for the pwm value per second, set it to -1 if you don't want a transition
+#ifndef USERMOD_TRANSITION_SPEED
+#define USERMOD_TRANSITION_SPEED 500
+#endif
 
 /*
  * Usermods allow you to add own functionality to WLED more easily
@@ -17,10 +21,13 @@ class MosfetDim : public Usermod {
   private:
     //Private class members. You can declare variables and functions only accessible to your usermod here
     unsigned long lastTime = 0;
-    byte pwmValue = 0;
-    byte lastPwmValue = 0;
-    boolean powerValue = true;
-    boolean lastPowerValue = true;
+    int curPwmValue = 0; //current pwm value
+    byte goalPwmValue = 0; //goal pwm value
+    byte lastPwmValue = 0; //pwm value before turning wled off (to restore when turning back on)
+    boolean powerValue = true; //the current power value of wled
+    boolean lastPowerValue = true; //the previous power value before it got changed
+    const int updateMs = 10; //milliseconds between updates
+    unsigned int changePerUpdate = 0; //per update the curPwmValue will change by this much
   public:
     //Functions called by WLED
 
@@ -30,6 +37,9 @@ class MosfetDim : public Usermod {
      */
     void setup() {
       //Serial.println("Hello from my usermod!");
+      if(USERMOD_TRANSITION_SPEED > 0) {
+        changePerUpdate = ceil(USERMOD_TRANSITION_SPEED / (1000 / updateMs));
+      }
     }
 
 
@@ -53,9 +63,27 @@ class MosfetDim : public Usermod {
      *    Instead, use a timer check as shown here.
      */
     void loop() {
-      if (millis() - lastTime > 10) {
-        analogWrite(USERMOD_MOSFET_PIN, pwmValue);
-        lastTime = millis();
+      if(curPwmValue != goalPwmValue) {
+        //Update every updateMs milliseconds
+        if (millis() - lastTime > updateMs) {
+          if(USERMOD_TRANSITION_SPEED <= 0) {
+            //No transition
+            curPwmValue = goalPwmValue;
+          } else {
+            //transition until at goal
+            if(curPwmValue < goalPwmValue) {
+              curPwmValue += changePerUpdate;
+              if(curPwmValue > goalPwmValue)
+                curPwmValue = goalPwmValue;
+            } else if(curPwmValue > goalPwmValue) {
+              curPwmValue -= changePerUpdate;
+              if(curPwmValue < goalPwmValue)
+                curPwmValue = goalPwmValue;
+            }
+          }
+          analogWrite(USERMOD_MOSFET_PIN, curPwmValue);
+          lastTime = millis();
+        }
       }
     }
 
@@ -67,12 +95,12 @@ class MosfetDim : public Usermod {
      */
     void addToJsonInfo(JsonObject& root)
     {
-      //this code adds "u":{"Mosfet Dim":[pwmValue," / 255"]} to the info object
+      //this code adds "u":{"Mosfet Dim":[curPwmValue," / 255"]} to the info object
       JsonObject user = root["u"];
       if (user.isNull()) user = root.createNestedObject("u");
 
       JsonArray lightArr = user.createNestedArray("Mosfet Dim"); //name
-      lightArr.add(pwmValue); //value
+      lightArr.add(curPwmValue); //value
       lightArr.add(" / 255"); //unit
     }
 
@@ -82,7 +110,7 @@ class MosfetDim : public Usermod {
      */
     void addToJsonState(JsonObject& root)
     {
-      root["mosfetdim"] = pwmValue;
+      root["mosfetdim"] = goalPwmValue;
     }
 
 
@@ -92,59 +120,22 @@ class MosfetDim : public Usermod {
      */
     void readFromJsonState(JsonObject& root)
     {
-      pwmValue = root["mosfetdim"] | pwmValue; //if "mosfet_dim" key exists in JSON, update, else keep old value
-      if(pwmValue < 0) Serial.println(F("received invalid mosfet_dim value, cannot be under 0!"));
-      if(pwmValue > 255) Serial.println(F("received invalid mosfet_dim value, cannot be over 255!"));
+      goalPwmValue = root["mosfetdim"] | goalPwmValue; //if "mosfetdim" key exists in JSON, update, else keep old value
+      if(goalPwmValue < 0) Serial.println(F("received invalid mosfet_dim value, cannot be under 0!"));
+      if(goalPwmValue > 255) Serial.println(F("received invalid mosfet_dim value, cannot be over 255!"));
       //Check the power state
       powerValue = root["on"] | powerValue;
       if(!powerValue && lastPowerValue) {
       //If Wled is turned off, also set the pwm value to 0
-        lastPwmValue = pwmValue;
-        pwmValue = 0;
+        lastPwmValue = goalPwmValue;
+        goalPwmValue = 0;
       } else if(powerValue && !lastPowerValue) {
         //If Wled is turned back on, set pwm value to the value before turning off
-        pwmValue = lastPwmValue;
+        goalPwmValue = lastPwmValue;
       }
       lastPowerValue = powerValue;
     }
 
-
-    /*
-     * addToConfig() can be used to add custom persistent settings to the cfg.json file in the "um" (usermod) object.
-     * It will be called by WLED when settings are actually saved (for example, LED settings are saved)
-     * If you want to force saving the current state, use serializeConfig() in your loop().
-     * 
-     * CAUTION: serializeConfig() will initiate a filesystem write operation.
-     * It might cause the LEDs to stutter and will cause flash wear if called too often.
-     * Use it sparingly and always in the loop, never in network callbacks!
-     * 
-     * addToConfig() will also not yet add your setting to one of the settings pages automatically.
-     * To make that work you still have to add the setting to the HTML, xml.cpp and set.cpp manually.
-     * 
-     * I highly recommend checking out the basics of ArduinoJson serialization and deserialization in order to use custom settings!
-     */
-    void addToConfig(JsonObject& root)
-    {
-      // JsonObject top = root.createNestedObject("exampleUsermod");
-      // top["great"] = userVar0; //save this var persistently whenever settings are saved
-    }
-
-
-    /*
-     * readFromConfig() can be used to read back the custom settings you added with addToConfig().
-     * This is called by WLED when settings are loaded (currently this only happens once immediately after boot)
-     * 
-     * readFromConfig() is called BEFORE setup(). This means you can use your persistent values in setup() (e.g. pin assignments, buffer sizes),
-     * but also that if you want to write persistent values to a dynamic buffer, you'd need to allocate it here instead of in setup.
-     * If you don't know what that is, don't fret. It most likely doesn't affect your use case :)
-     */
-    void readFromConfig(JsonObject& root)
-    {
-      // JsonObject top = root["top"];
-      // userVar0 = top["great"] | 42; //The value right of the pipe "|" is the default value in case your setting was not present in cfg.json (e.g. first boot)
-    }
-
-   
     /*
      * getId() allows you to optionally give your V2 usermod an unique ID (please define it in const.h!).
      * This could be used in the future for the system to determine whether your usermod is installed.
@@ -154,6 +145,4 @@ class MosfetDim : public Usermod {
       return USERMOD_ID_MOSFETDIM;
     }
 
-   //More methods can be added in the future, this example will then be extended.
-   //Your usermod will remain compatible as it does not need to implement all methods from the Usermod base class!
 };
